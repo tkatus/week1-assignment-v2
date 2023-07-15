@@ -1,0 +1,99 @@
+---
+title: "Coursera - Exploratory Data Analysis in R, week 1"
+output: html_notebook
+---
+
+```{r}
+df = read.delim('./Data/household_power_consumption.txt', sep = ";", dec = ".")
+cat('DataFrame size:', dim(df))
+
+# convert dates and time to reasonable format
+df$Date <- as.Date(df$Date, format='%d/%m/%Y')
+
+# use subset 2007-02-01 and 2007-02-02
+df  <-  subset(df, Date >= '2007-02-01' & Date <= '2007-02-02')
+# simple slice notation works too, but less intuitive - do not forget to include the ,: # df <- df[df$Date >= '2007-02-01' & df$Date <= '2007-02-02', ]
+
+cat('Subset of dataFrame size:', dim(df))
+
+# check if missing values
+for (x in names(df)) {
+  cat(sum(df$x == '?'), 'missing values in column', x, '\n')
+}
+
+# convert to numeric, if not Date or Time
+for (x in names(df)) {
+  if (!(x %in% c('Date', 'Time'))) {
+    df[[x]] <- as.numeric(df[[x]])
+  }
+}
+
+# integrate Date and Time > datetime
+df$datetime <- as.POSIXct(paste(df$Date, df$Time))
+
+head(df)
+```
+
+## Figure 1
+
+Note that contrary to the assignment, I am going to include the pix into the NB
+rather than saving them as figs
+
+(to insert codeblocks, type Ctrl+Alt+i)
+
+
+``` {r}
+hist(df$Global_active_power, main='Global Active Power', xlab='Global Active Power (kilowatts)', col='red')
+
+```
+## Figure 2
+
+``` {r} 
+xticks = c("2007-02-01", "2007-02-02", "2007-02-03")
+plot(Global_active_power~datetime, data=df, type='l', xaxt='n', xlab='', ylab='Global Active Power (kilowatts)')
+axis.POSIXct(1, df$datetime, at=xticks, labels=c('Thu', 'Fri', 'Sat'))
+
+```
+
+
+## Figure 3
+
+```{r}
+xticks = c("2007-02-01", "2007-02-02", "2007-02-03")
+with(df, {
+  plot(Sub_metering_1~datetime, type='l', col='black', xaxt='n', xlab='', ylab='Energy sub metering') # note: no separator (, or alike) 
+  lines(Sub_metering_2~datetime, type='l', col='red')
+  lines(Sub_metering_3~datetime, type='l', col='blue')
+  axis.POSIXct(1, df$datetime, at=xticks, labels=c('Thu', 'Fri', 'Sat'))
+  legend('topright',lwd=2, col=c('black', 'blue', 'red'), legend=c('Sub_metering_1','Sub_metering_2','Sub_metering_3'))
+})
+
+```
+
+
+## Figure 4
+
+```{r fig.dim=c(16, 16)}
+xticks = c("2007-02-01", "2007-02-02", "2007-02-03")
+lab = c('Thu', 'Fri', 'Sat')
+par(mfcol=c(2,2), oma=c(0,0,1,0)) # oma: outer margins - start bottom, then clockwise (left, top, right)
+with(df, {
+  # fig 1
+  plot(Global_active_power~datetime, data=df, type='l', xaxt='n', xlab='', ylab='Global Active Power')
+  axis.POSIXct(1, datetime, at=xticks, labels=lab)
+  # fig 2  
+  plot(Sub_metering_1~datetime, type='l', col='black', xaxt='n', xlab='', ylab='Energy sub metering') 
+  lines(Sub_metering_2~datetime, type='l', col='red')
+  lines(Sub_metering_3~datetime, type='l', col='blue')
+  axis.POSIXct(1, datetime, at=xticks, labels=lab)
+  legend('topright',lwd=2, col=c('black', 'blue', 'red'), bty = "n", legend=c('Sub_metering_1','Sub_metering_2','Sub_metering_3'))
+  # fig 3
+  plot(Voltage~datetime, type='l', col='black', xaxt='n')
+  axis.POSIXct(1, datetime, at=xticks, labels=lab)
+  # fig 4
+  plot(Global_reactive_power~datetime, type='l', col='black', xaxt='n')
+  axis.POSIXct(1, datetime, at=xticks, labels=lab)
+})
+
+```
+
